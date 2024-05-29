@@ -24,8 +24,30 @@ class URL:
 
         response = sock.makefile("r", encoding="utf8", newline="\r\n")
 
+        # Status line
         statusLine = response.readline
         version, status, explanation = statusLine.split(" ",2)
+
+        #Headers
+        response_headers ={}
+        while True:
+            line = response.readline()
+            if line == "\r\n":
+                break
+            
+            header, value = line.split(":",1)
+            response_headers[header.casefold()] = value.strip()
+
+            assert "content-encoding" not in response_headers
+            assert "transfer-encoding" not in response_headers
+
+            content = response.read()
+            sock.close
+
+            return content
+
+
+
 
 
 
@@ -39,3 +61,4 @@ url=URL("http://example.com/abc.html")
 print("The url scheme is: ",url.scheme)
 print("The host is: ",url.host)
 print("The path is: ",url.path)
+
