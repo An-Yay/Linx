@@ -11,7 +11,15 @@ class URL:
         url (str): The input URL in the format 'http://host/path'.
         """
         self.scheme, url = url.split("://", 1)
-        assert self.scheme == "http", "Only 'http' scheme is supported."
+        assert self.scheme in ["http", "https"]
+
+        if self.scheme == "http":
+            self.port = 80
+        elif self.scheme == "https":
+            if  ":" in self.scheme:
+                self.host, port = self.host.split(":", 1)
+                self.port = int(port)
+            self.port = 443
 
         if "/" not in url:
             url = url + "/"
@@ -30,8 +38,12 @@ class URL:
         sock = socket.socket(family=socket.AF_INET,
                              type=socket.SOCK_STREAM, proto=socket.IPPROTO_TCP)
 
-        # Connect to the host on port 80
-        sock.connect((self.host, 80))
+        
+        sock.connect((self.host, self.port))
+        if self.scheme == "https":
+            context = ssl.create_default_context()
+            sock = context.wrap_socket(sock, server_hostname=self.host)
+
 
         # Formulate the GET request
         request = "GET {} HTTP/1.0\r\n".format(self.path)
